@@ -1,0 +1,28 @@
+# dependencies
+/node_modules
+
+# production
+/build
+/dist
+
+# Test coverage
+/coverage
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.vscode
+__diff_output__
+
+*.log
+
+# Tests temp directory
+/tests/.tmp/
+report.*.json
+
+# Yalc (yarn link alternative)
+.yalc/
+yalc.lock

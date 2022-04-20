@@ -5,5 +5,9 @@
   "repository": "https://github.com/ebi-uniprot/uniprot-sitemap.git",
   "author": "Aurélien Luciani <aurel-l@users.noreply.github.com>",
   "license": "MIT",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "axios": "0.26.1",
+    "progress": "2.0.3"
+  }
 }
