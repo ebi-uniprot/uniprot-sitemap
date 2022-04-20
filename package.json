@@ -1,0 +1,9 @@
+{
+  "name": "uniprot-sitemap",
+  "version": "0.0.1",
+  "main": "index.js",
+  "repository": "https://github.com/ebi-uniprot/uniprot-sitemap.git",
+  "author": "Aurélien Luciani <aurel-l@users.noreply.github.com>",
+  "license": "MIT",
+  "private": true
+}
