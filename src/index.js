@@ -3,6 +3,9 @@
 const fs = require("fs");
 const axios = require("axios");
 const ProgressBar = require("progress");
+const path = require("path");
+
+const buildDir = "./build";
 
 const accessionCountPerFile = 50_000;
 const publicPath = "https://www.uniprot.org/";
@@ -91,7 +94,7 @@ async function* fileGenerator() {
   while (entry) {
     // eslint-disable-next-line no-plusplus
     const filename = `sitemap-${`${++fileIndex}`.padStart(padLength, "0")}.xml`;
-    const writableStream = fs.createWriteStream(`./${filename}`);
+    const writableStream = fs.createWriteStream(path.join(buildDir, filename));
 
     // Note: might want to pipe it through a gzip stream
     writableStream.write(`<?xml version="1.0" encoding="UTF-8"?>
@@ -124,8 +127,13 @@ async function* fileGenerator() {
 }
 
 const main = async () => {
+  fs.rmSync(buildDir, { recursive: true, force: true });
+  fs.mkdirSync(buildDir);
+
   // Note: might want to pipe it through a gzip stream
-  const writableStream = fs.createWriteStream("./sitemap-index.xml");
+  const writableStream = fs.createWriteStream(
+    path.join(buildDir, "sitemap-index.xml")
+  );
   writableStream.on("error", (error) => {
     console.log(
       `An error occured while writing to the index file. Error: ${error.message}`
