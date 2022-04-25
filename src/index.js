@@ -127,9 +127,8 @@ async function* fileGenerator() {
 }
 
 const main = async () => {
-  if (!fs.existsSync(buildDir)) {
-    fs.mkdirSync(buildDir);
-  }
+  fs.rmSync(buildDir, { recursive: true, force: true });
+  fs.mkdirSync(buildDir);
 
   // Note: might want to pipe it through a gzip stream
   const writableStream = fs.createWriteStream(
