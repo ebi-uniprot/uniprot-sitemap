@@ -4,10 +4,15 @@ This script generates a sitemap for uniprot currently using the first 500 entrie
 
 # To run
 
-[NVM](https://github.com/nvm-sh/nvm) has been installed on `noah-login` for `uni_adm`.
+**Only run on HX login nodes**
+
+because:
+
+1. [NVM](https://github.com/nvm-sh/nvm) has been installed on `noah-login` for `uni_adm`.
+2. The built sitemap is rsync'd across to HH.
+
+To generate and sync sitemaps:
 
 ```
-nvm install --lts  # Install LTS version of node
-npm install        # Install all needed packages
-node src/index.js  # Run index.js script
+./run.sh
 ```
