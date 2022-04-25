@@ -1,7 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Terminate on any errors
 set -e
+
+# Ensure NVM is available
+. ~/.nvm/nvm.sh
 
 # Install LTS version of node
 nvm install --lts
