@@ -1,130 +1,76 @@
 #!/usr/bin/env node
-/* eslint-disable no-console, @typescript-eslint/no-var-requires */
 const fs = require("fs");
-const axios = require("axios");
-const ProgressBar = require("progress");
 const path = require("path");
 
-const buildDir = "./build";
+const { buildDir, sitemapIndexFile } = require("./shared");
 
-const accessionCountPerFile = 50_000;
+const uniprotWebsiteFileGenerator = require("./namespaces/uniprot-website");
+
+const uniprotkbFileGenerator = require("./namespaces/uniprotkb");
+const unirefFileGenerator = require("./namespaces/uniref");
+const uniparcFileGenerator = require("./namespaces/uniparc");
+const proteomesFileGenerator = require("./namespaces/proteomes");
+
+const citationsFileGenerator = require("./namespaces/citations");
+const supportingDataFileGenerator = require("./namespaces/supporting-data");
+const databaseFileGenerator = require("./namespaces/database");
+
+const automaticAnnotationsFileGenerator = require("./namespaces/automatic-annotations");
+
+const articleGenerator = require("./namespaces/articles");
+
 const publicPath = "https://www.uniprot.org/";
-// const query = '*';
-const query = "(organism_id:9606) OR (reviewed:true)";
 
-const nextRE = /<([0-9a-zA-Z$\-_.+!*'(),?/:=&%]+)>; rel="next"/;
-
-const getNextURLFromHeaders = (parsedHeaders) => {
-  if (!parsedHeaders?.link) {
-    return;
-  }
-
-  const match = nextRE.exec(parsedHeaders.link);
-  // eslint-disable-next-line consistent-return
-  return match?.[1];
-};
-
-async function* entryGenerator() {
-  let response = await axios({
-    url: `https://rest.uniprot.org/beta/uniprotkb/search?query=${query}&fields=accession,date_modified&size=500`,
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-    },
-  });
-
-  // first, yield the total
-  yield +response.headers["x-total-records"];
-
-  for (const result of response.data.results) {
-    // then yield each entry from the first page
-    yield {
-      accession: result.primaryAccession,
-      lastModified: result.entryAudit.lastAnnotationUpdateDate,
-    };
-  }
-
-  let next = getNextURLFromHeaders(response.headers);
-
-  while (next) {
-    // eslint-disable-next-line no-await-in-loop
-    response = await axios({
-      url: next,
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
-    });
-    for (const result of response.data.results) {
-      if (result) {
-        // then yield each entry for the next pages
-        yield {
-          accession: result.primaryAccession,
-          lastModified: result.entryAudit.lastAnnotationUpdateDate,
-        };
-      }
-    }
-
-    next = getNextURLFromHeaders(response.headers);
-  }
-}
-
-async function* fileGenerator() {
-  const entryIterator = entryGenerator();
-
-  const { value: total } = await entryIterator.next();
-
-  const padLength = `${Math.ceil(total / accessionCountPerFile)}`.length;
-  let fileIndex = 0;
-  let accessionCountInFile = 0;
-
-  console.log(`found ${total} entries for the query "${query}"`);
-  const bar = new ProgressBar(
-    "🗺  generating sitemaps [:bar] :rate URLs per second :percent :etas",
-    {
-      complete: "=",
-      incomplete: " ",
-      width: 20,
-      total,
-    }
-  );
-
-  let { value: entry } = await entryIterator.next();
-
-  while (entry) {
-    // eslint-disable-next-line no-plusplus
-    const filename = `sitemap-${`${++fileIndex}`.padStart(padLength, "0")}.xml`;
-    const writableStream = fs.createWriteStream(path.join(buildDir, filename));
-
-    // Note: might want to pipe it through a gzip stream
-    writableStream.write(`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-`);
-
-    writableStream.on("error", (error) => {
-      console.log(
-        `An error occured while writing to the index file. Error: ${error.message}`
-      );
-    });
-
-    while (accessionCountInFile < accessionCountPerFile && entry) {
-      writableStream.write(`  <url>
-    <loc>https://www.uniprot.org/uniprotkb/${entry.accession}</loc>
-    <lastmod>${entry.lastModified}</lastmod>
-  </url>
-`);
-      bar.tick(1);
-      // eslint-disable-next-line no-plusplus
-      accessionCountInFile++;
-      // eslint-disable-next-line no-await-in-loop
-      entry = (await entryIterator.next()).value;
-    }
-
-    writableStream.end("</urlset>");
-    accessionCountInFile = 0;
-    yield filename;
-  }
-}
+// Below, specify namespace (no default) and query (defaults to "*")
+const fileGenerators = [
+  // Website generic pages
+  uniprotWebsiteFileGenerator({ namespace: "uniprot-website" }),
+  // UniProtKB
+  uniprotkbFileGenerator({
+    namespace: "uniprotkb",
+    query: "(organism_id:9606) OR (reviewed:true)",
+  }),
+  // UniRef
+  unirefFileGenerator({
+    namespace: "uniref",
+    query: "(identity:0.5) AND (taxonomy_id:9606)",
+  }),
+  // UniParc: skip, incredibly slow
+  // uniparcFileGenerator({
+  //   namespace: "uniparc",
+  //   query: "(active:*) AND (taxonomy_id:9606) AND (database_facet:1)",
+  // }),
+  // Proteomes
+  proteomesFileGenerator({
+    namespace: "proteomes",
+    query: "(proteome_type:1)",
+  }),
+  // Taxonomy
+  supportingDataFileGenerator({
+    namespace: "taxonomy",
+    query: "* AND (taxonomies_with:1_uniprotkb)",
+  }),
+  // Keywords
+  supportingDataFileGenerator({ namespace: "keywords" }),
+  citationsFileGenerator({
+    namespace: "citations",
+    query: "* AND (citations_with:1_uniprotkb)",
+  }),
+  // Diseases
+  supportingDataFileGenerator({ namespace: "diseases" }),
+  // Database
+  databaseFileGenerator({ namespace: "database" }),
+  // Locations
+  supportingDataFileGenerator({ namespace: "locations" }),
+  // UniRule
+  automaticAnnotationsFileGenerator({ namespace: "unirule" }),
+  // ARBA
+  automaticAnnotationsFileGenerator({ namespace: "arba" }),
+  // Help
+  articleGenerator({ namespace: "help" }),
+  // Release Notes
+  articleGenerator({ namespace: "release-notes" }),
+];
 
 const main = async () => {
   fs.rmSync(buildDir, { recursive: true, force: true });
@@ -139,16 +85,13 @@ const main = async () => {
       `An error occured while writing to the index file. Error: ${error.message}`
     );
   });
-  writableStream.write(`<?xml version="1.0" encoding="UTF-8"?>
-  <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-`);
-  for await (const filename of fileGenerator()) {
-    writableStream.write(`  <sitemap>
-    <loc>${publicPath}${filename}</loc>
-  </sitemap>
-`);
+  writableStream.write(sitemapIndexFile.start);
+  for (const fileGenerator of fileGenerators) {
+    for await (const filename of fileGenerator()) {
+      writableStream.write(sitemapIndexFile.file(publicPath + filename));
+    }
   }
-  writableStream.end("</sitemapindex>");
+  writableStream.end(sitemapIndexFile.end);
 };
 
-main();
+main().catch((err) => console.error(err.message));
