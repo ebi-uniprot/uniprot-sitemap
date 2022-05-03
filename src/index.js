@@ -151,4 +151,7 @@ const main = async () => {
   writableStream.end(sitemapIndexFile.end);
 };
 
-main().catch((err) => console.error(err.message));
+main().catch((err) => {
+  console.error(err.message);
+  process.exit(1);
+});
