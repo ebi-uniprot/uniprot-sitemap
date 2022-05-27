@@ -75,6 +75,10 @@ const topTaxons = [
   11676, //	Human immunodeficiency virus 1
 ];
 
+const topTaxonsQuery = topTaxons
+  .map((taxon) => `(taxonomy_id:${taxon})`)
+  .join(" OR ");
+
 // Below, specify namespace (no default) and query (defaults to "*")
 const fileGenerators = [
   // Website generic pages
@@ -82,18 +86,17 @@ const fileGenerators = [
   // UniProtKB
   uniprotkbFileGenerator({
     namespace: "uniprotkb",
-    query: `(reviewed:true) OR ${topTaxons
-      .map((taxon) => `(taxonomy_id:${taxon})`)
-      .join("OR")}`,
+    query: `(reviewed:true) OR ${topTaxonsQuery}`,
   }),
   // UniRef
   unirefFileGenerator({
     namespace: "uniref",
-    query: "(identity:0.5) AND (taxonomy_id:9606)",
+    query: `(identity:0.5) AND (${topTaxonsQuery})`,
   }),
   // UniParc: skip, incredibly slow
   // uniparcFileGenerator({
   //   namespace: "uniparc",
+  //   // database_facet:1 = UniProtKB
   //   query: "(active:*) AND (taxonomy_id:9606) AND (database_facet:1)",
   // }),
   // Proteomes
@@ -103,16 +106,10 @@ const fileGenerators = [
     query: "(proteome_type:1) OR (proteome_type:2)",
   }),
   // Taxonomy
-  supportingDataFileGenerator({
-    namespace: "taxonomy",
-    query: "(taxonomies_with:1_uniprotkb)",
-  }),
+  supportingDataFileGenerator({ namespace: "taxonomy" }),
   // Keywords
   supportingDataFileGenerator({ namespace: "keywords" }),
-  citationsFileGenerator({
-    namespace: "citations",
-    query: "(citations_with:1_uniprotkb)",
-  }),
+  citationsFileGenerator({ namespace: "citations" }),
   // Diseases
   supportingDataFileGenerator({ namespace: "diseases" }),
   // Database
