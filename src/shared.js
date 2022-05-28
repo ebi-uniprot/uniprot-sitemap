@@ -42,12 +42,7 @@ const sitemapFile = {
 };
 
 /* NETWORK CALL ABSTRACTION */
-const isOK = (response) =>
-  "status" in response &&
-  `${response.status}`.startsWith("2") &&
-  "data" in response &&
-  response.data;
-const MAX_RETRIES = 10;
+const MAX_RETRIES = 20;
 
 const customFetch = async (url, head = false) => {
   if (head) {
@@ -56,12 +51,16 @@ const customFetch = async (url, head = false) => {
   let count = 0;
   let response = {};
   while (true) {
-    response = await axios(url);
-    if (!isOK(response) && count < MAX_RETRIES) {
-      // exponential backoff (with magic numbers)
-      await sleep(Math.pow(1.4, ++count) * 1000);
-    } else {
+    try {
+      response = await axios(url);
       break;
+    } catch (err) {
+      if (count < MAX_RETRIES) {
+        // exponential backoff (with magic numbers)
+        await sleep(Math.pow(1.4, ++count) * 1000);
+      } else {
+        break;
+      }
     }
   }
   return response;
