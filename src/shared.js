@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { sleep } = require('timing-functions');
+const { sleep } = require("timing-functions");
 
 const nextRE = /<([0-9a-zA-Z$\-_.+!*'(),?/:=&%]+)>; rel="next"/;
 
@@ -42,12 +42,12 @@ const sitemapFile = {
 };
 
 /* NETWORK CALL ABSTRACTION */
-const isOK = (response) => `${response.status}`.startsWith('2');
+const isOK = (response) => `${response.status}`.startsWith("2");
 const MAX_RETRIES = 10;
 
-const customFetch = (url, head = false) => {
+const customFetch = async (url, head = false) => {
   if (head) {
-    return axios({url, method: "HEAD"});
+    return axios({ url, method: "HEAD" });
   }
   let count = 0;
   let response = {};
@@ -55,13 +55,13 @@ const customFetch = (url, head = false) => {
     response = await axios(url);
     if (!isOK(response) && count < MAX_RETRIES) {
       // exponential backoff (with magic numbers)
-      await sleep(Math.pow(1.4, ++count) * 1000)
+      await sleep(Math.pow(1.4, ++count) * 1000);
     } else {
       break;
     }
   }
   return url;
-}
+};
 
 /* CONSTANTS */
 const accessionCountPerFile = 50_000;
