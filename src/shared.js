@@ -42,7 +42,11 @@ const sitemapFile = {
 };
 
 /* NETWORK CALL ABSTRACTION */
-const isOK = (response) => `${response.status}`.startsWith("2");
+const isOK = (response) =>
+  "status" in response &&
+  `${response.status}`.startsWith("2") &&
+  "data" in response &&
+  response.data;
 const MAX_RETRIES = 10;
 
 const customFetch = async (url, head = false) => {
@@ -60,7 +64,7 @@ const customFetch = async (url, head = false) => {
       break;
     }
   }
-  return url;
+  return response;
 };
 
 /* CONSTANTS */
