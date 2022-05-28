@@ -1,7 +1,6 @@
 const fs = require("fs");
 const path = require("path");
 
-const axios = require("axios");
 const ProgressBar = require("progress");
 
 const {
@@ -9,6 +8,7 @@ const {
   accessionCountPerFile,
   buildDir,
   sitemapFile,
+  customFetch,
 } = require("../shared");
 
 module.exports = ({ namespace, query = "*" } = {}) => {
@@ -16,7 +16,7 @@ module.exports = ({ namespace, query = "*" } = {}) => {
   const baseURL = `https://rest.uniprot.org/${namespace}/search?format=json&query=${query}&fields=id`;
   async function* entryGenerator() {
     // Initial query, just for the size => allows to follow progress
-    let response = await axios({ url: `${baseURL}&size=0`, method: "HEAD" });
+    let response = await customFetch(`${baseURL}&size=0`, true);
     // first, yield the total
     yield +response.headers["x-total-records"];
 
@@ -26,7 +26,7 @@ module.exports = ({ namespace, query = "*" } = {}) => {
       let responsePromise;
       // First, ask server for data for the next loop
       if (nextURL) {
-        responsePromise = axios(nextURL);
+        responsePromise = customFetch(nextURL);
       }
 
       // In the meantime, process the current payload
