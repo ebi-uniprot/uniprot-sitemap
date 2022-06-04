@@ -3,9 +3,9 @@
 bsub \
 -q production-rh74 \
 -J "uniprot-sitemap" \
--e log.e \
--o log.o \
+-eo log.e \
+-oo log.o \
 -M 1000 \
 -R"select[mem>1000] rusage[mem=1000] span[hosts=1]" \
--n 1 \
+-n 2 \
 ./run.sh

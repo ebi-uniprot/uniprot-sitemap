@@ -50,7 +50,7 @@ module.exports = ({ namespace, query = "*" } = {}) => {
   }
 
   const urlsPerEntry = 1;
-  async function* fileGenerator() {
+  async function fileCreator() {
     const entryIterator = entryGenerator();
 
     const { value: total } = await entryIterator.next();
@@ -108,9 +108,8 @@ module.exports = ({ namespace, query = "*" } = {}) => {
 
       writableStream.end(sitemapFile.end);
       urlCountInFile = 0;
-      yield filename;
     }
   }
 
-  return fileGenerator;
+  return fileCreator;
 };
