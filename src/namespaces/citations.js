@@ -31,13 +31,16 @@ module.exports = ({ namespace, query = "*" } = {}) => {
       // In the meantime, process the current payload
       for (const result of data?.results || []) {
         if (result) {
-          let lastModified;
+          let lastModified = undefined;
           try {
-            [lastModified] = new Date(result.citation.publicationDate)
-              .toISOString()
-              .split("T");
+            const date = new Date(result.citation.publicationDate);
+            const year = date.getFullYear();
+            if (Number.isNaN(year) || year < 1980) {
+              throw new Error("Too old, just don't store it");
+            }
+            [lastModified] = date.toISOString().split("T");
           } catch (e) {
-            lastModified = result.citation.publicationDate;
+            /**/
           }
           // then yield each entry for the next pages
           yield {
