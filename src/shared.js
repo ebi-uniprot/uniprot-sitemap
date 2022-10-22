@@ -46,7 +46,8 @@ const MAX_RETRIES = 20;
 
 const customFetch = async (url, head = false) => {
   if (head) {
-    return axios({ url, method: "HEAD" });
+    // NOTE: bug in axios when using HEAD, change it back later after lib update
+    return axios({ url, method: "GET" });
   }
   let count = 0;
   let response = {};

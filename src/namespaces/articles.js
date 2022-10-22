@@ -17,7 +17,7 @@ module.exports = ({ namespace, query = "*" } = {}) => {
     // Initial query, just for the size => allows to follow progress
     let response = await customFetch(`${baseURL}&size=0`, true);
     // first, yield the total
-    yield +response.headers["x-total-records"];
+    yield +response.headers["x-total-results"];
 
     let nextURL = `${baseURL}&size=500`;
     let data;

@@ -100,11 +100,7 @@ const fileCreators = {
     query: "(active:*) AND (taxonomy_id:9606) AND (database_facet:1)",
   }),
   // Proteomes
-  proteomes: proteomesFileCreator({
-    namespace: "proteomes",
-    // Reference proteomes OR Other proteomes (excluded Redundant and Excluded)
-    query: "(proteome_type:1) OR (proteome_type:2)",
-  }),
+  proteomes: proteomesFileCreator({ namespace: "proteomes" }),
   // Taxonomy
   taxonomy: supportingDataFileCreator({ namespace: "taxonomy" }),
   // Keywords
