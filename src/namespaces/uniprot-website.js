@@ -28,7 +28,7 @@ module.exports = ({ namespace } = {}) => {
     "unirule?query=*",
     "arba?query=*",
     "help?query=*",
-    // 'release-notes?query=*'
+    "release-notes?query=*",
   ];
 
   async function* entryGenerator() {
