@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 bsub \
--q production-rh74 \
+-q production \
 -J "uniprot-sitemap" \
 -eo log.e \
 -oo log.o \
