@@ -1,12 +1,9 @@
-const fs = require("fs");
-const path = require("path");
-
-const ProgressBar = require("progress");
-
 const {
   getNextURLFromHeaders,
+  getPadLength,
+  getWritableStream,
+  getProgressBar,
   accessionCountPerFile,
-  buildDir,
   sitemapFile,
   customFetch,
 } = require("../shared");
@@ -56,24 +53,14 @@ module.exports = ({ namespace, query = "*" } = {}) => {
 
     const { value: total } = await entryIterator.next();
 
-    const padLength = `${Math.ceil(
-      (total * urlsPerEntry) / accessionCountPerFile
-    )}`.length;
+    const padLength = getPadLength(urlsPerEntry, total);
     let fileIndex = 0;
     let urlCountInFile = 0;
 
     console.log(
       `found ${total} entries for the query "${query}" in "${namespace}"`
     );
-    const bar = new ProgressBar(
-      "🗺  [:bar] generating sitemap URLs :rate entries per second :percent :etas",
-      {
-        complete: "=",
-        incomplete: " ",
-        width: 20,
-        total,
-      }
-    );
+    const bar = getProgressBar(total);
 
     let { value: entry } = await entryIterator.next();
 
@@ -81,21 +68,12 @@ module.exports = ({ namespace, query = "*" } = {}) => {
       const filename = `sitemap-${namespace}-${`${++fileIndex}`.padStart(
         padLength,
         "0"
-      )}.xml`;
-      const writableStream = fs.createWriteStream(
-        path.join(buildDir, filename)
-      );
+      )}.xml.gz`;
+      const writableStream = getWritableStream(filename);
 
-      // Note: might want to pipe it through a gzip stream
       writableStream.write(sitemapFile.start);
 
-      writableStream.on("error", (error) => {
-        console.log(
-          `An error occured while writing to the index file. Error: ${error.message}`
-        );
-      });
-
-      while (urlCountInFile + urlsPerEntry < accessionCountPerFile && entry) {
+      while (urlCountInFile + urlsPerEntry <= accessionCountPerFile && entry) {
         writableStream.write(
           sitemapFile.location(
             `https://www.uniprot.org/${namespace}/${entry.accession}`,

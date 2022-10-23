@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-const fs = require("fs");
+const fs = require("node:fs");
+
 const { program, Option } = require("commander");
 
 const { buildDir } = require("./shared");
@@ -73,9 +74,11 @@ const topTaxons = [
   11676, //	Human immunodeficiency virus 1
 ];
 
-const topTaxonsQuery = topTaxons
-  .map((taxon) => `(taxonomy_id:${taxon})`)
-  .join(" OR ");
+const topTaxonsQuery = (cutoff = topTaxons.length) =>
+  topTaxons
+    .slice(0, cutoff)
+    .map((taxon) => `(taxonomy_id:${taxon})`)
+    .join(" OR ");
 
 // Below, specify namespace (no default) and query (defaults to "*")
 const fileCreators = {
@@ -86,18 +89,18 @@ const fileCreators = {
   // UniProtKB
   uniprotkb: uniprotkbFileCreator({
     namespace: "uniprotkb",
-    query: `(reviewed:true) OR ${topTaxonsQuery}`,
+    query: `(reviewed:true) OR ${topTaxonsQuery()} OR (annotation_score:5) OR (annotation_score:4) OR (annotation_score:3)`,
   }),
   // UniRef
   uniref: unirefFileCreator({
     namespace: "uniref",
-    query: `(identity:0.5) AND (${topTaxonsQuery})`,
+    query: `${topTaxonsQuery()}`,
   }),
-  // UniParc: skip, incredibly slow
+  // UniParc
   uniparc: uniparcFileCreator({
     namespace: "uniparc",
     // database_facet:1 = UniProtKB
-    query: "(active:*) AND (taxonomy_id:9606) AND (database_facet:1)",
+    query: `(active:*) AND (${topTaxonsQuery(12)}) AND (database_facet:1)`,
   }),
   // Proteomes
   proteomes: proteomesFileCreator({ namespace: "proteomes" }),

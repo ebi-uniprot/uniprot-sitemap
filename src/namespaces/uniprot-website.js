@@ -1,9 +1,10 @@
-const fs = require("fs");
-const path = require("path");
-
-const ProgressBar = require("progress");
-
-const { accessionCountPerFile, buildDir, sitemapFile } = require("../shared");
+const {
+  getPadLength,
+  getWritableStream,
+  getProgressBar,
+  accessionCountPerFile,
+  sitemapFile,
+} = require("../shared");
 
 module.exports = ({ namespace } = {}) => {
   const pages = [
@@ -46,22 +47,12 @@ module.exports = ({ namespace } = {}) => {
 
     const { value: total } = await entryIterator.next();
 
-    const padLength = `${Math.ceil(
-      (total * urlsPerEntry) / accessionCountPerFile
-    )}`.length;
+    const padLength = getPadLength(urlsPerEntry, total);
     let fileIndex = 0;
     let urlCountInFile = 0;
 
     console.log(`found ${total} pages in ${namespace}`);
-    const bar = new ProgressBar(
-      "🗺  [:bar] generating sitemap URLs :rate entries per second :percent :etas",
-      {
-        complete: "=",
-        incomplete: " ",
-        width: 20,
-        total,
-      }
-    );
+    const bar = getProgressBar(total);
 
     let { value: entry } = await entryIterator.next();
 
@@ -69,22 +60,13 @@ module.exports = ({ namespace } = {}) => {
       const filename = `sitemap-${namespace}-${`${++fileIndex}`.padStart(
         padLength,
         "0"
-      )}.xml`;
-      const writableStream = fs.createWriteStream(
-        path.join(buildDir, filename)
-      );
+      )}.xml.gz`;
+      const writableStream = getWritableStream(filename);
 
-      // Note: might want to pipe it through a gzip stream
       writableStream.write(sitemapFile.start);
 
-      writableStream.on("error", (error) => {
-        console.log(
-          `An error occured while writing to the index file. Error: ${error.message}`
-        );
-      });
-
       while (
-        urlCountInFile + urlsPerEntry < accessionCountPerFile &&
+        urlCountInFile + urlsPerEntry <= accessionCountPerFile &&
         typeof entry === "string"
       ) {
         writableStream.write(

@@ -1,30 +1,24 @@
 #!/usr/bin/env node
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
 
-const { buildDir, sitemapIndexFile } = require("./shared");
+const { getWritableStream, buildDir, sitemapIndexFile } = require("./shared");
 
 const publicPath = "https://www.uniprot.org/";
-const indexFilename = "sitemap-index.xml";
+const indexFilename = "sitemap-index.xml.gz";
 
 const main = () => {
   const filenames = fs.readdirSync(buildDir);
 
-  // Note: might want to pipe it through a gzip stream
-  const writableStream = fs.createWriteStream(
-    path.join(buildDir, indexFilename)
-  );
-  writableStream.on("error", (error) => {
-    console.log(
-      `An error occured while writing to the index file. Error: ${error.message}`
-    );
-  });
+  const writableStream = getWritableStream(indexFilename);
+
   writableStream.write(sitemapIndexFile.start);
+
   for (const filename of filenames) {
-    if (filename !== indexFilename && filename.endsWith(".xml")) {
+    if (filename !== indexFilename && filename.endsWith(".xml.gz")) {
       writableStream.write(sitemapIndexFile.file(publicPath + filename));
     }
   }
+
   writableStream.end(sitemapIndexFile.end);
 };
 

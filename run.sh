@@ -25,10 +25,7 @@ node src/index.js clear
 node src/index.js sitemap --namespaces uniprotkb &
 node src/index.js sitemap --namespaces uniref &
 node src/index.js sitemap --namespaces uniparc &
-node src/index.js sitemap --namespaces proteomes &
-node src/index.js sitemap --namespaces taxonomy &
-node src/index.js sitemap --namespaces citations &
-node src/index.js sitemap --namespaces uniprot-website keywords diseases database locations unirule arba help release-notes &
+node src/index.js sitemap --namespaces proteomes taxonomy citations uniprot-website keywords diseases database locations unirule arba help release-notes &
 
 wait
 

@@ -1,7 +1,17 @@
+const fs = require("node:fs");
+const path = require("node:path");
+const zlib = require("node:zlib");
+
 const axios = require("axios");
 const { sleep } = require("timing-functions");
+const ProgressBar = require("progress");
 
 const nextRE = /<([0-9a-zA-Z$\-_.+!*'(),?/:=&%]+)>; rel="next"/;
+
+/* CONSTANTS */
+const accessionCountPerFile = 50_000;
+
+const buildDir = "./build";
 
 /* HELPER FUNCTIONS */
 const getNextURLFromHeaders = (parsedHeaders) => {
@@ -12,6 +22,37 @@ const getNextURLFromHeaders = (parsedHeaders) => {
   const match = nextRE.exec(parsedHeaders.link);
   return match?.[1];
 };
+
+const getPadLength = (urlsPerEntry, total) =>
+  `${Math.ceil((total * urlsPerEntry) / accessionCountPerFile)}`.length;
+
+const getWritableStream = (filename) => {
+  const gzipStream = zlib.createGzip();
+  const fileStream = fs.createWriteStream(path.join(buildDir, filename));
+  gzipStream.pipe(fileStream);
+  gzipStream.on("error", (error) => {
+    console.error(
+      `An error occured while compressing ${filename}. Error: ${error.message}`
+    );
+  });
+  fileStream.on("error", (error) => {
+    console.error(
+      `An error occured while writing to ${filename}. Error: ${error.message}`
+    );
+  });
+  return gzipStream;
+};
+
+const getProgressBar = (total) =>
+  new ProgressBar(
+    "🗺  [:bar] generating sitemap URLs :rate entries per second :percent :etas",
+    {
+      complete: "=",
+      incomplete: " ",
+      width: 20,
+      total,
+    }
+  );
 
 /* XML WRITER HELPERS */
 const sitemapIndexFile = {
@@ -58,8 +99,11 @@ const customFetch = async (url, head = false) => {
     } catch (err) {
       if (count < MAX_RETRIES) {
         // exponential backoff (with magic numbers)
-        await sleep(Math.pow(1.4, ++count) * 1000);
+        const sleepTime = Math.pow(1.4, ++count);
+        console.error("Failed to fetch", url, `retrying in ${sleepTime}s`);
+        await sleep(sleepTime * 1000);
       } else {
+        console.error("Failed to fetch", url, `giving up...`);
         break;
       }
     }
@@ -67,13 +111,11 @@ const customFetch = async (url, head = false) => {
   return response;
 };
 
-/* CONSTANTS */
-const accessionCountPerFile = 50_000;
-
-const buildDir = "./build";
-
 module.exports = {
   getNextURLFromHeaders,
+  getPadLength,
+  getWritableStream,
+  getProgressBar,
 
   sitemapIndexFile,
   sitemapFile,
