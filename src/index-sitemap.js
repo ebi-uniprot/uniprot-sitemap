@@ -100,7 +100,7 @@ const fileCreators = {
   uniparc: uniparcFileCreator({
     namespace: "uniparc",
     // database_facet:1 = UniProtKB
-    query: `(active:*) AND (${topTaxonsQuery(12)}) AND (database_facet:1)`,
+    query: `(active:*) AND (${topTaxonsQuery(12)}) AND (database_facet:100)`,
   }),
   // Proteomes
   proteomes: proteomesFileCreator({ namespace: "proteomes" }),
