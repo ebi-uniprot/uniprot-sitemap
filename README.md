@@ -1,6 +1,6 @@
 # About
 
-This script generates a sitemap for uniprot currently using the first 500 entries returned from the UniProtKB query `(organism_id:9606) OR (reviewed:true)`.
+This script generates a sitemap for uniprot. See `src/index-sitemap.js` for the queries used for the different namespaces.
 
 # To run
 
