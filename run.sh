@@ -34,4 +34,4 @@ wait
 node src/index.js index
 
 # Sync across to production machine
-rsync -avz --delete build pg-001:/net/isilonP/public/rw/uniprot/uniprot-sitemap
+rsync -av --delete --exclude='data-*' build pg-001:/net/isilonP/public/rw/uniprot/uniprot-sitemap
