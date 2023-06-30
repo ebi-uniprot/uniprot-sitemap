@@ -103,7 +103,10 @@ const fileCreators = {
     query: `(active:*) AND (${topTaxonsQuery(12)}) AND (database_facet:100)`,
   }),
   // Proteomes
-  proteomes: proteomesFileCreator({ namespace: "proteomes" }),
+  proteomes: proteomesFileCreator({
+    namespace: "proteomes",
+    query: "(proteome_type:1)",
+  }),
   // Taxonomy
   taxonomy: supportingDataFileCreator({ namespace: "taxonomy" }),
   // Keywords

@@ -22,10 +22,12 @@ npm install
 node src/index.js clear
 
 # Generate multiple sitemaps at once
-node src/index.js sitemap --namespaces uniprotkb &
-node src/index.js sitemap --namespaces uniref &
-node src/index.js sitemap --namespaces uniparc &
-node src/index.js sitemap --namespaces proteomes taxonomy citations uniprot-website keywords diseases database locations unirule arba help release-notes &
+# node src/index.js sitemap --namespaces uniprotkb &
+# node src/index.js sitemap --namespaces uniref &
+# node src/index.js sitemap --namespaces uniparc &
+node src/index.js sitemap --namespaces taxonomy &
+node src/index.js sitemap --namespaces citations &
+node src/index.js sitemap --namespaces proteomes uniprot-website keywords diseases database locations unirule arba help release-notes &
 
 wait
 
